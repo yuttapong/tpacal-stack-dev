@@ -1,97 +1,85 @@
 version: "3.9"
 services:
-  # heimdall:
-  #   image: linuxserver/heimdall
-  #   container_name: heimdall
-  #   volumes:
-  #     - /home/user/appdata/heimdall:/config
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=${TIMEZONE}
-  #   ports:
-  #     - 80:80
-  #     - 443:443
-  #   restart: unless-stopped
-  # nginx:
-  #   image: linuxserver/nginx
-  #   container_name: nginx
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=${TIMEZONE}
-  #   volumes:
-  #     - /_docker/php/nginx.d:/config/site-confs
-  #     - /_docker/php:/config/www
-  #   ports:
-  #     - 80:80
-  #     - 444:443
-  # restart: unless-stopped
-  # app1:
-  #   container_name: app1
-  #   restart: always
-  #   build: ./app1
-  #   ports:
-  #     - '3000:3000'
-  #   external_links:
-  #     - mariadb
   appcal:
-    container_name: appcal
-    # restart: always
+    container_name: tpa-appcal
+    restart: always
     build: ./_docker/php7
     ports:
       - 9000:80
     volumes:
       - ./appcal:/var/www/html
+    networks:
+      - frontend
+
+  ganban:
+    container_name: tpa-ganban
+    restart: always
+    build: ./ganban
+    command: npm run dev
+    ports:
+      - '3000:3000'
+    networks:
+      - frontend
+
   e_certificate:
-    container_name: e_certificate
-    # restart: always
+    container_name: tpa-e_certificate
+    restart: always
     build: ./_docker/php8
     ports:
       - 9001:80
+    external_links:
+      - mysql
     volumes:
       - ./e-certificate/:/var/www/html
+    networks:
+      - frontend
 
   mysql:
+    container_name: tpa-mysql
     image: mysql:latest
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_MYSQL_ROOT_PASS}
+      MYSQL_ROOT_HOST: ${DB_MYSQL_ROOT_HOST}
+      MYSQL_ROOT_PASSWORD: ${DB_MYSQL_ROOT_PASS}W
       MYSQL_DATABASE: ${DB_MYSQL_NAME}
       MYSQL_USER: ${DB_MYSQL_USER}
       MYSQL_PASSWORD: ${DB_MYSQL_PASS}
     ports:
       - 9906:3306
     volumes:
-      - ./mysql_data:/var/lib/mysql
-
-  composer:
-    image: composer:latest
-    container_name: composer
-    volumes:
-      - .:/website
-    working_dir: /website
-    depends_on:
-      - e_certificate
+      - ./_database/mysql:/var/lib/mysql
     networks:
-      - default
+      - backend
 
-  # restart: unless-stopped
   phpmyadmin:
+    container_name: tpa-phpmyadmin
     image: phpmyadmin/phpmyadmin:latest
     hostname: phpmyadmin
     ports:
       - 9090:80
     environment:
-      - PMA_HOST=mariadb
+      - PMA_HOST=mysql
     depends_on:
       - mysql
-  # mongo:
-  #   container_name: mongo
-  #   image: mongo
-  #   ports:
-  #     - 27017:27017
-volumes:
-  mysql_data:
+  mongo:
+    container_name: tpa-mongo
+    image: mongo
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - ./_database/mongo:/etc/mongo
+  redis:
+    container_name: tpa-redis
+    build: ./_docker/redis
+    ports:
+      - 6379:6379
+    volumes:
+      - ./_database/redis:/data
 networks:
-  default:
-    name: tpacal
+  frontend:
+  backend:
+
+volumes:
+  data:

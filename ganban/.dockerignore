@@ -1,7 +1,8 @@
-# node modules to ignore
+
 node_modules/
-# logs
-logs/
-# git  metadata ignore
 .git
+.dockerignore
+package.json
+package-lock.json
+yarn.lock
 dist/

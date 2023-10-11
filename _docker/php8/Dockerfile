@@ -7,7 +7,6 @@ EXPOSE 80
 EXPOSE 443
 
 
-# copy the Composer PHAR from the Composer image into the PHP image
-COPY --from=composer:2.6.4 /usr/bin/composer /usr/bin/composer
-# show that both Composer and PHP run as expected
-RUN composer --version && php -v
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+
+RUN composer --version && php -v && docker-php-ext-install pdo pdo_mysql

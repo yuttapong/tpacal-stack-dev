@@ -1,9 +1,9 @@
-mysql_data/
+_database/
 
 appcal/vendor
-
+e-certificate/vendor
 ganban/node_modules/
 ganban/dist/
 
-e-certificate/vendor
+
 
